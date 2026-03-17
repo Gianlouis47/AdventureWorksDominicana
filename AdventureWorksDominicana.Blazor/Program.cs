@@ -1,5 +1,6 @@
 using AdventureWorksDominicana.Blazor.Components;
 using AdventureWorksDominicana.Data.Context;
+using AdventureWorksDominicana.Services;
 using Blazored.Toast;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,7 @@ builder.Services.AddDbContextFactory<Contexto>(options =>
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
+builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddBlazoredToast();
 var app = builder.Build();
 

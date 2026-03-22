@@ -16,6 +16,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddBlazoredToast();
 builder.Services.AddScoped<ShipMethodService>();
 builder.Services.AddScoped<CountryRegionsService>();
+builder.Services.AddScoped<PhoneNumberTypeService>();
 
 builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<PersonService>();

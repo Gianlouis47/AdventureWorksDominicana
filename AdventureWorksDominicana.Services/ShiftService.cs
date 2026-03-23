@@ -11,14 +11,38 @@ namespace AdventureWorksDominicana.Services;
 
 public class ShiftService(IDbContextFactory<Contexto> DbFactory) : IService<Shift, byte>
 {
-    public Task<Shift?> Buscar(byte id)
+    public async Task<bool> Existe(byte Id)
     {
-        throw new NotImplementedException();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Shifts.AnyAsync(s => s.ShiftId.Equals(Id));
+    }
+    public async Task<bool> Insertar(Shift shift)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        contexto.Shifts.Add(shift);
+        return await contexto.SaveChangesAsync() > 0;
+    }
+    public async Task<Shift?> Buscar(byte Id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Shifts.AsNoTracking().FirstOrDefaultAsync(s => s.ShiftId == Id);
     }
 
-    public Task<bool> Eliminar(byte id)
+    public async Task<bool> Eliminar(byte Id)
     {
-        throw new NotImplementedException();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        bool Usando = await contexto.EmployeeDepartmentHistories.AnyAsync(s => s.ShiftId == Id);
+
+        if (Usando)
+        {
+            throw new InvalidOperationException("No se puede eliminar el turno porque tiene empreados asignados");
+        }
+
+        var filasAfectadas = await contexto.Shifts.Where(s => s.ShiftId == Id).ExecuteDeleteAsync();
+
+        return filasAfectadas > 0;
+
+        
     }
 
     public async Task<List<Shift>> GetList(Expression<Func<Shift, bool>> criterio)
@@ -27,8 +51,30 @@ public class ShiftService(IDbContextFactory<Contexto> DbFactory) : IService<Shif
         return await contexto.Shifts.Where(criterio).AsNoTracking().ToListAsync();
     }
 
-    public Task<bool> Guardar(Shift entidad)
+    public async Task<bool> Guardar(Shift shift)
     {
-        throw new NotImplementedException();
+        if(shift.StartTime == shift.EndTime)
+        {
+            throw new InvalidOperationException("La hora de inicio y la hora de fin no pueden ser iguales");
+        }
+        if (!await Existe(shift.ShiftId))
+        {
+            return await Insertar(shift);
+        }
+        else
+        {
+            return await Modificar(shift);
+        }
+    }
+
+    public async Task<bool> Modificar(Shift shift)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        shift.ModifiedDate = DateTime.Now;
+        contexto.Shifts.Update(shift);
+
+        return await contexto.SaveChangesAsync() > 0;
+
     }
 }

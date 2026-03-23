@@ -1,0 +1,94 @@
+﻿@page "/Culture/Index"
+@rendermode InteractiveServer
+@inject CultureService cultureService
+
+
+<PageTitle>Culture Index</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        
+        <div class="card-header d-flex justify-content-between align-items-center bg-primary">
+            <h5 class="card-title text-light mb-0">Registro de Culturas</h5>
+            <a href="Culture/Create" class="btn btn-light d-flex gap-2">
+                <i class="bi bi-plus-square-fill text-primary"></i>
+                <span class="text-primary fw-bold">Crear Nueva</span>
+            </a>
+        </div>
+        
+        <div class="card-body">
+            
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Desde</label>
+                    <input class="form-control" type="date" @bind="StartDate" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <input class="form-control" type="date" @bind="EndDate" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Filtrar por</label>
+                    <select class="form-select" @bind="Filtro">
+                        <option value="">Seleccione una opci&oacute;n</option>
+                        <option value="CultureId">ID de Cultura</option>
+                        <option value="Name">Nombre</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Buscar</label>
+                    <div class="input-group">
+                        <input class="form-control" type="text" placeholder="Buscar..." @bind="ValorFiltro" />
+                        <button class="btn btn-outline-primary" type="button" @onclick="Buscar">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive mt-3">
+                <QuickGrid Items="CulturesList.AsQueryable()" Pagination="@pages" Class="table table-bordered table-hover table-striped text-center align-middle">
+                    <PropertyColumn Property="@(c => c.CultureId)" Title="Culture ID" Sortable="true" />
+                    <PropertyColumn Property="@(c => c.Name)" Title="Nombre" Sortable="true" />
+                    <PropertyColumn Property="@(c => c.ModifiedDate)" Title="Fecha de Modificaci&oacute;n" Format="dd/MM/yyyy" Sortable="true" />
+                    <TemplateColumn Context="option" Title="Opciones">
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="Culture/Edit/@option.CultureId" class="btn btn-outline-warning" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </TemplateColumn>
+                </QuickGrid>
+                
+                <Paginator State="@pages" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Culture> CulturesList = new List<Culture>();
+    private PaginationState pages = new PaginationState { ItemsPerPage = 5 };
+    private string Filtro = string.Empty;
+    private string ValorFiltro = string.Empty;
+    private DateTime? StartDate = DateTime.Today.Date;
+    private DateTime? EndDate = DateTime.Today.Date.AddDays(1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        CulturesList = await cultureService.GetList(c => true);
+    }
+
+    private async Task Buscar()
+    {
+        CulturesList = await cultureService.GetList(c =>
+            (!StartDate.HasValue || !EndDate.HasValue ||
+            (c.ModifiedDate >= StartDate.Value.Date && c.ModifiedDate <= EndDate.Value.Date.AddDays(1).AddTicks(-1)))
+            &&
+            (string.IsNullOrWhiteSpace(ValorFiltro) || string.IsNullOrWhiteSpace(Filtro) ||
+                (Filtro == "CultureId" && c.CultureId.Contains(ValorFiltro)) ||
+                (Filtro == "Name" && c.Name.Contains(ValorFiltro))
+            )
+        );
+    }
+}

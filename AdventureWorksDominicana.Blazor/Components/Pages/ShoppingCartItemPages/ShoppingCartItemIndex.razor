@@ -96,7 +96,7 @@
         {
             if (Filtros == "IdCart" )
             {
-                resultado = await shoppingCartItemService.GetList(x => x.ShoppingCartId == ValorFiltro.ToLower().Trim());
+                resultado = await shoppingCartItemService.GetList(x => x.ShoppingCartId != null && x.ShoppingCartId.ToLower().Trim().Contains(ValorFiltro.ToLower().Trim()));
             }
             if (Filtros == "IdItem" && int.TryParse(ValorFiltro, out int id))
             {

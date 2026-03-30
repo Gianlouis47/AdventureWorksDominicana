@@ -4,52 +4,76 @@
 @using AdventureWorksDominicana.Services
 @inject SpecialOfferService SpecialOfferService
 @inject NavigationManager Navigation
-@inject Blazored.Toast.Services.IToastService ToastService
 
 <PageTitle>Editar SpecialOffer</PageTitle>
 
-<h3>Editar SpecialOffer</h3>
+@if (model == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="container mt-4">
+        <div class="card shadow-lg">
 
-<EditForm Model="model" OnValidSubmit="Guardar">
-    <DataAnnotationsValidator />
+            <div class="card-header">
+                <h4 class="mb-0">Editar SpecialOffer</h4>
+            </div>
 
-    <InputText class="form-control mb-2" @bind-Value="model.Description" />
-    <InputNumber class="form-control mb-2" @bind-Value="model.DiscountPct" />
-    <InputText class="form-control mb-2" @bind-Value="model.Type" />
-    <InputText class="form-control mb-2" @bind-Value="model.Category" />
+            <EditForm Model="model" OnValidSubmit="Guardar">
+                <DataAnnotationsValidator />
 
-    <button class="btn btn-primary">Guardar</button>
-    <button type="button" class="btn btn-secondary" @onclick="Volver">Volver</button>
-</EditForm>
+                <div class="card-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Id</label>
+                        <InputNumber class="form-control" @bind-Value="model.SpecialOfferId" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción</label>
+                        <InputText class="form-control" @bind-Value="model.Description" />
+                        <ValidationMessage For="() => model.Description" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descuento</label>
+                        <InputNumber class="form-control" @bind-Value="model.DiscountPct" />
+                        <ValidationMessage For="() => model.DiscountPct" />
+                    </div>
+
+                </div>
+
+                <div class="card-footer text-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-floppy"></i> Modificar
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" @onclick="Volver">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </button>
+                </div>
+
+            </EditForm>
+
+        </div>
+    </div>
+}
 
 @code {
     [Parameter] public int Id { get; set; }
 
-    private SpecialOffer model = new();
+    private SpecialOffer? model;
 
     protected override async Task OnParametersSetAsync()
     {
-        var data = await SpecialOfferService.Buscar(Id);
-
-        if (data != null)
-            model = data;
-        else
-            Navigation.NavigateTo("/specialoffer");
+        model = await SpecialOfferService.Buscar(Id);
     }
 
     private async Task Guardar()
     {
-        var ok = await SpecialOfferService.Guardar(model);
-
-        if (ok)
-        {
-            ToastService.ShowSuccess("Actualizado correctamente");
-            Navigation.NavigateTo("/specialoffer");
-        }
-        else
-        {
-            ToastService.ShowError("Error al actualizar");
-        }
+        await SpecialOfferService.Guardar(model!);
+        Navigation.NavigateTo("/specialoffer");
     }
 
     private void Volver() => Navigation.NavigateTo("/specialoffer");

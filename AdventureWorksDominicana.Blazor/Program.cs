@@ -37,6 +37,13 @@ builder.Services.AddScoped<AddressService>();
 builder.Services.AddScoped<ShipMethodService>();
 builder.Services.AddScoped<CurrencyRateService>();
 builder.Services.AddScoped<SpecialOfferProductService>();
+builder.Services.AddScoped<ProductDescriptionService>();
+builder.Services.AddScoped<ShoppingCartItemService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<ProductModelService>();
+builder.Services.AddScoped<UnitMeasureService>();
+builder.Services.AddScoped<ProductSubcategoryService>();
+builder.Services.AddScoped<StateProvinceService>();
 
 builder.Services.AddBlazorBootstrap();
 var app = builder.Build();

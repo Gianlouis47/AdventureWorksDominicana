@@ -8,12 +8,6 @@ namespace AdventureWorksDominicana.Services;
 
 public class ShipMethodService(IDbContextFactory<Contexto> DbFactory): IService<ShipMethod, int> 
 {
-    public async Task<List<ShipMethod>> Listar(Expression<Func<ShipMethod, bool>> criterio)
-    {
-        await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.ShipMethods.Where(criterio).ToListAsync();
-    }
-
     public async Task<bool> Guardar(ShipMethod ship)
     {
         if (!await Existe(ship.ShipMethodId))

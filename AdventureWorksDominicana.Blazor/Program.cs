@@ -32,6 +32,11 @@ builder.Services.AddScoped<SalesTerritoryService>();
 builder.Services.AddScoped<VendorService>();
 builder.Services.AddScoped<ProductDescriptionService>();
 builder.Services.AddScoped<ShoppingCartItemService>();
+builder.Services.AddScoped<EmailAddressService>();
+builder.Services.AddScoped<VStoreWithContactService>();
+builder.Services.AddScoped<SpecialOfferService>();
+builder.Services.AddScoped<AddressService>();
+builder.Services.AddScoped<VStateProvinceCountryRegionService>();
 
 
 builder.Services.AddBlazorBootstrap();

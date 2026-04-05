@@ -3,8 +3,12 @@ using AdventureWorksDominicana.Data.Context;
 using AdventureWorksDominicana.Services;
 using Blazored.Toast;
 using Microsoft.EntityFrameworkCore;
+using AdventureWorksDominicana.Data.Models;
+using Microsoft.AspNetCore.Identity;
+using AdventureWorksDominicana.Blazor.Components.Account;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 builder.Services.AddDbContextFactory<Contexto>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConStr")));
@@ -13,23 +17,42 @@ builder.Services.AddDbContext<SecurityContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConStr")));
 
 
+builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => {
+builder.Services.AddScoped<IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<IdentityRedirectManager>();
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+})
+.AddIdentityCookies();
+
+builder.Services.AddIdentityCore<AspNetUser>(options =>
+{
     options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = false; 
+    options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
 })
-.AddEntityFrameworkStores<SecurityContext>();
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<SecurityContext>()
+.AddSignInManager()
+.AddDefaultTokenProviders();
+
+builder.Services.AddSingleton<IEmailSender<AspNetUser>, IdentityNoOpEmailSender>();
 
 
-
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Services
+builder.Services.AddBlazorBootstrap();
+
+
 builder.Services.AddScoped<CurrencyService>();
 builder.Services.AddBlazoredToast();
 builder.Services.AddScoped<ShipMethodService>();
@@ -69,22 +92,20 @@ builder.Services.AddScoped<StateProvinceService>();
 builder.Services.AddScoped<CultureService>();
 builder.Services.AddScoped<LocationService>();
 
-builder.Services.AddBlazorBootstrap();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
-
 app.UseAntiforgery();
-
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

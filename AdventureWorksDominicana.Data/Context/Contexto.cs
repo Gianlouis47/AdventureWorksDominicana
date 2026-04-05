@@ -208,9 +208,18 @@ public partial class Contexto : DbContext
 
     public virtual DbSet<WorkOrderRouting> WorkOrderRoutings { get; set; }
 
-    /*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=EnelXps;Database=AdventureWorksDb;Trusted_Connection=True;TrustServerCertificate=True");*/
+        => optionsBuilder.UseSqlServer("Server=EnelXps;Database=AdventureWorksDb;Trusted_Connection=True;TrustServerCertificate=True");
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            
+            optionsBuilder.UseSqlServer("workstation id=AdventureWorksDb.mssql.somee.com;packet size=4096;user id=AdenawellTorres_SQLLogin_1;pwd=tc54sf6glk;data source=AdventureWorksDb.mssql.somee.com;persist security info=False;initial catalog=AdventureWorksDb;TrustServerCertificate=True");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -5,12 +5,14 @@
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
-@using AdventureWorksIdentity.Data
+@using AdventureWorksDominicana.Data.Context
+@using AdventureWorksDominicana.Data.Models 
+@inject AdventureWorksDominicana.Data.Context.Contexto DbContext
 
-@inject UserManager<ApplicationUser> UserManager
-@inject IUserStore<ApplicationUser> UserStore
-@inject SignInManager<ApplicationUser> SignInManager
-@inject IEmailSender<ApplicationUser> EmailSender
+@inject UserManager<AspNetUser> UserManager
+@inject IUserStore<AspNetUser> UserStore
+@inject SignInManager<AspNetUser> SignInManager
+@inject IEmailSender<AspNetUser> EmailSender
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
@@ -27,6 +29,19 @@
             <h2>Create a new account.</h2>
             <hr />
             <ValidationSummary class="text-danger" role="alert" />
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FirstName" class="form-control" placeholder="Nombre" />
+                <label>Nombre</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LastName" class="form-control" placeholder="Apellido" />
+                <label>Apellido</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label for="Input.Email">Email</label>
@@ -73,10 +88,13 @@
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();
+        user.Id = Guid.NewGuid().ToString();
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+    
+        
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
@@ -87,9 +105,47 @@
 
         Logger.LogInformation("User created a new account with password.");
 
+
+        try
+        {
+
+            var nuevaEntidad = new BusinessEntity
+            {
+                Rowguid = Guid.NewGuid(),
+                ModifiedDate = DateTime.Now
+            };
+        
+            DbContext.BusinessEntities.Add(nuevaEntidad);
+            await DbContext.SaveChangesAsync(); 
+
+            var nuevaPersona = new Person
+            {
+                BusinessEntityId = nuevaEntidad.BusinessEntityId,
+                PersonType = "IN", 
+                FirstName = Input.FirstName, 
+                LastName = Input.LastName,   
+                NameStyle = false,
+                EmailPromotion = 0,
+                Rowguid = Guid.NewGuid(),
+                ModifiedDate = DateTime.Now
+            };
+
+            DbContext.People.Add(nuevaPersona);
+            await DbContext.SaveChangesAsync();
+        
+            Logger.LogInformation("Perfil de Person creado exitosamente en AdventureWorks.");
+        }
+        catch (Exception ex)
+        {
+
+            Logger.LogError($"Error al crear el perfil de negocio: {ex.Message}");
+        }
+
+
         var userId = await UserManager.GetUserIdAsync(user);
         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+    
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
@@ -109,31 +165,39 @@
         }
     }
 
-    private ApplicationUser CreateUser()
+    private AspNetUser CreateUser()
     {
         try
         {
-            return Activator.CreateInstance<ApplicationUser>();
+            return Activator.CreateInstance<AspNetUser>();
         }
         catch
         {
-            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
-                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(AspNetUser)}'. " +
+                $"Ensure that '{nameof(AspNetUser)}' is not an abstract class and has a parameterless constructor.");
         }
     }
 
-    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    private IUserEmailStore<AspNetUser> GetEmailStore()
     {
         if (!UserManager.SupportsUserEmail)
         {
             throw new NotSupportedException("The default UI requires a user store with email support.");
         }
-        return (IUserEmailStore<ApplicationUser>)UserStore;
+        return (IUserEmailStore<AspNetUser>)UserStore;
     }
 
     private sealed class InputModel
     {
-        [Required]
+        [Required(ErrorMessage = "El nombre es obligatorio")]
+        [Display(Name = "Nombre")]
+        public string FirstName { get; set; } = "";
+
+        [Required(ErrorMessage = "El apellido es obligatorio")]
+        [Display(Name = "Apellido")]
+        public string LastName { get; set; } = "";
+
+        [Required(ErrorMessage = "El email es obligatorio")]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = "";

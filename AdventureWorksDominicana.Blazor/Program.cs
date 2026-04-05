@@ -46,7 +46,7 @@ builder.Services.AddIdentityCore<AspNetUser>(options =>
 
 builder.Services.AddSingleton<IEmailSender<AspNetUser>, IdentityNoOpEmailSender>();
 
-// Componentes de Blazor
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 

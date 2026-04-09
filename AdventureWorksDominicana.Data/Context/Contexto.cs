@@ -1904,7 +1904,20 @@ public partial class Contexto : DbContext
                 NormalizedName = "CUSTOMER",
                 ConcurrencyStamp = Guid.NewGuid().ToString()
             });
-
+        modelBuilder.Entity<UnitMeasure>().HasData(
+            new UnitMeasure { UnitMeasureCode = "CM", Name = "Centimeter", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "M", Name = "Meter", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "KG", Name = "Kilogram", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "L", Name = "Liter", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "IN", Name = "Inch", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "FT", Name = "Foot", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "YD", Name = "Yard", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "G", Name = "Gram", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "MG", Name = "Milligram", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "BOX", Name = "Box", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "PK", Name = "Pack", ModifiedDate = new DateTime(2026, 04, 08) },
+            new UnitMeasure { UnitMeasureCode = "DZ", Name = "Dozen", ModifiedDate = new DateTime(2026, 04, 08) }
+        );
 
         OnModelCreatingPartial(modelBuilder);
     }

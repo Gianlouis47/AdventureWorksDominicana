@@ -9,26 +9,35 @@ using System.Text;
 
 namespace AdventureWorksDominicana.Services;
 
-public class UserService(IDbContextFactory<Contexto> DbFactory) : IService<AspNetUser, int>
+public class UserService(IDbContextFactory<Contexto> DbFactory) : IService<AspNetUser, string>
 {
-    public Task<AspNetUser?> Buscar(int id)
+    public async Task<AspNetUser?> Buscar(string id)
     {
-        throw new NotImplementedException();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.AspNetUsers.FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public Task<bool> Eliminar(int id)
+    public async Task<bool> Eliminar(string id)
     {
-        throw new NotImplementedException();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var user = await Buscar(id);
+
+        if (user == null) return false;
+
+        contexto.AspNetUsers.Eliminado = true;
+        return await contexto.SaveChangesAsync() > 0;
     }
 
     public async Task<List<AspNetUser>> GetList(Expression<Func<AspNetUser, bool>> criterio)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.AspNetUsers.Where(criterio).OrderBy(t => t.UserName).ToListAsync();
+        return await contexto.AspNetUsers.Where(criterio).OrderBy(t => t.UserName).Include(u => u.Roles).ToListAsync();
     }
 
-    public Task<bool> Guardar(AspNetUser entidad)
+    public async Task<bool> Guardar(AspNetUser entidad)
     {
-        throw new NotImplementedException();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        contexto.AspNetUsers.Update(entidad);
+        return await contexto.SaveChangesAsync() > 0;
     }
 }

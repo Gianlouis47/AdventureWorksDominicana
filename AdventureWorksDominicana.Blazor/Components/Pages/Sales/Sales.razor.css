@@ -97,7 +97,7 @@
     padding: 15px;
     transition: 0.3s;
     cursor: pointer;
-    background-color: #F0F0F0;
+    background-color: #F5F5F5;
     border: 2px solid #E6E6E6;
 }
 
@@ -170,7 +170,7 @@
     margin-top: 10px;
     border: none;
     border-radius: 10px;
-    background: linear-gradient(135deg, #466EDB, #01398C);
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
     color: white;
     padding: 8px;
     font-weight: 500;

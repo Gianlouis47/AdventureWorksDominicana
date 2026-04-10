@@ -25,12 +25,11 @@
 
 /* FILTROS */
 .product-filters {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background-color: #F5F5F5;
+    border: 2px solid #E6E6E6;
     padding: 20px 24px;
     border-radius: 20px;
     margin-bottom: 24px;
-
     /* Sombra más notoria */
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 20px -6px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
@@ -79,12 +78,11 @@
 
 /* TABLA */
 .product-table {
-    border: 1px solid #e5e7eb;
-    background: white;
+    background-color: #F5F5F5;
+    border: 2px solid #E6E6E6;
     border-radius: 20px;
     padding: 20px;
     overflow-x: auto;
-
     /* Sombra con brillo lateral izquierdo */
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 20px -6px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
@@ -100,7 +98,6 @@
 
     /* HEADER */
     .product-table thead {
-        background: #466EDB;
         color: white;
     }
 

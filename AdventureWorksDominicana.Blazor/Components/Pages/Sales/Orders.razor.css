@@ -23,6 +23,21 @@
         color: #6b7280;
     }
 
+/* BOTÓN OUTLINE */
+.btn-outline {
+    border: 1px solid #466EDB;
+    color: #466EDB;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+    .btn-outline:hover {
+        background: #466EDB;
+        color: white;
+    }
+
 /* ===== RESUMEN ===== */
 .orders-summary {
     display: grid;
@@ -33,9 +48,9 @@
 
 .summary-card {
     background-color: #F5F5F5;
+    border: 2px solid #E6E6E6;
     padding: 15px;
     border-radius: 12px;
-    border: 2px solid #E6E6E6;
 }
 
     .summary-card span {
@@ -57,7 +72,7 @@
 
 /* ===== CARD ===== */
 .order-card {
-    background-color: #F0F0F0;
+    background-color: #F5F5F5;
     border: 2px solid #E6E6E6;
     border-radius: 16px;
     cursor: pointer;

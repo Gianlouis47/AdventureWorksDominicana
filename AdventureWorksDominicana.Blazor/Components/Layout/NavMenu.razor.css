@@ -212,27 +212,16 @@
 .nav-scrollable {
     overflow-y: auto;
     max-height: 100vh;
-    scrollbar-width: thin;
-    scrollbar-color: #6c757d #343a40;
 }
 
     .nav-scrollable::-webkit-scrollbar {
         width: 6px;
     }
 
-    .nav-scrollable::-webkit-scrollbar-track {
-        background: #343a40;
-        border-radius: 3px;
-    }
-
     .nav-scrollable::-webkit-scrollbar-thumb {
-        background: #6c757d;
-        border-radius: 3px;
+        background: #4F7EFF;
+        border-radius: 10px;
     }
-
-        .nav-scrollable::-webkit-scrollbar-thumb:hover {
-            background: #adb5bd;
-        }
 
 .accordion-button {
     font-size: 0.9rem;

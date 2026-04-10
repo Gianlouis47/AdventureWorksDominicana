@@ -35,12 +35,12 @@
         <div class="card-body">
             <div class="sale-input">
                 <div class="input-group">
-                    <input class="form-control" placeholder="buscar producto" @oninput="Buscar" />
+                    <input class="form-control" placeholder="Buscar producto..." @oninput="Buscar" />
                     <i class="btn btn-primary bi bi-search"></i>
                 </div>
                 <div class="input-group">
                     <select class="form-select">
-                        <option>Por Categoria</option>
+                        <option value="" hidden selected disabled>Por Categoria</option>
                     </select>
                     <i class="btn btn-primary bi bi-filter"></i>
                 </div>
@@ -48,7 +48,7 @@
             <div class="sale-products">
                 @foreach (var p in PagedProducts)
                 {
-                    <div class="sale-product-card">
+                    <div class="sale-product-card" @onclick="() => GoToProductDetail(p.ProductId)">
                         <div class="sale-product-img">
                             <img src="https://www.svgrepo.com/show/486796/product-management.svg" alt="Product Image" />
                             <span>@p.Color</span>
@@ -112,6 +112,8 @@
         ActualizarVista();
         await CountProductsShopping();
     }
+
+    private async Task GoToProductDetail(int id) => navigationManager.NavigateTo("/Product/Detail/" + id);
 
     private async Task CountProductsShopping()
     {

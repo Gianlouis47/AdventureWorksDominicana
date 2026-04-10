@@ -1,0 +1,123 @@
+﻿@page "/Product/Detail/{ProductId:int}"
+@rendermode InteractiveServer
+
+@inject ProductService productService
+@inject ShoppingCartItemService shoppingCartItemService
+@inject ToastService toastService
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider authenticationStateProvider
+
+<PageTitle>Producto</PageTitle>
+
+<div class="product-container">
+
+    <!-- HEADER -->
+    <div class="product-header">
+        <div>
+            <h3>Detalle del producto</h3>
+            <span>Información completa del producto</span>
+        </div>
+
+        <button class="btn-back" @onclick="GoBack">
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+    </div>
+
+    @if (Product != null)
+    {
+        <div class="product-content">
+
+            <!-- IMAGEN -->
+            <div class="product-image">
+                <img src="https://www.svgrepo.com/show/486796/product-management.svg" />
+                <span class="product-color">@Product.Color</span>
+            </div>
+
+            <!-- INFO -->
+            <div class="product-info">
+
+                <span class="product-category">
+                    @(Product.ProductSubcategory?.ProductCategory?.Name ?? "N/A")
+                </span>
+
+                <h2>@Product.Name</h2>
+
+                <p class="product-description">
+                    @(Product.ProductModel?.ProductModelProductDescriptionCultures
+                        .FirstOrDefault()?.ProductDescription?.Description ?? "Sin descripción")
+                </p>
+
+                <div class="product-price">
+                    RD$ @Product.ListPrice.ToString("N2")
+                </div>
+
+                <div class="product-actions">
+                    <button class="btn-add" @onclick="() => Guardar(Product.ProductId)">
+                        <i class="bi bi-cart"></i> Agregar al carrito
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    }
+    else
+    {
+        <div class="product-empty">
+            <p>Cargando producto...</p>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public int ProductId { get; set; }
+
+    private Product? Product;
+
+    private ClaimsPrincipal? User { get; set; }
+    private bool IsAuthenticated { get; set; }
+    private string? UserEmail { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Usuario
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        User = authState.User;
+        IsAuthenticated = User.Identity?.IsAuthenticated ?? false;
+
+        if (IsAuthenticated)
+        {
+            UserEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+        }
+
+        // Producto
+        Product = await productService.Buscar(ProductId);
+    }
+
+    private async Task Guardar(int productId)
+    {
+        try
+        {
+            await shoppingCartItemService.Guardar(
+            new ShoppingCartItem
+            {
+                ShoppingCartId = UserEmail,
+                Quantity = 1,
+                ProductId = productId,
+                DateCreated = DateTime.Now,
+                ModifiedDate = DateTime.Now
+            });
+
+            toastService.ShowSuccess("Producto añadido al carrito");
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError("Error al agregar producto");
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private void GoBack() => navigationManager.NavigateTo("/Sales");
+}

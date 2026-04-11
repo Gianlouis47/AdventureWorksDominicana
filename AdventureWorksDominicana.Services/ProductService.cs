@@ -33,6 +33,12 @@ public class ProductService(IDbContextFactory<Contexto> DbContextFactory) : ISer
             .ToListAsync();
     }
 
+    public async Task<List<Product>> GetListIndex(Expression<Func<Product, bool>> criterio)
+    {
+        await using var contexto = await DbContextFactory.CreateDbContextAsync();
+        return await contexto.Products.AsNoTracking().Include(p => p.ProductSubcategory).Where(criterio).ToListAsync();
+    }
+
     public async Task<bool> Existe(int id)
     {
         await using var contexto = await DbContextFactory.CreateDbContextAsync();
@@ -100,12 +106,20 @@ public class ProductService(IDbContextFactory<Contexto> DbContextFactory) : ISer
         {
             return await contexto.Products.Where(p => p.ProductId == id).ExecuteDeleteAsync() > 0;
         }
-        catch (DbUpdateException ex)
+        catch (Exception) 
         {
-            throw new ProductDependentDataException("No se puede eliminar el producto porque tiene dependencias activas (ej. Ventas, Inventario).", ex);
+            var producto = await contexto.Products.FindAsync(id);
+            if (producto != null)
+            {
+                producto.SellEndDate = DateTime.Now;
+                contexto.Products.Update(producto);
+                await contexto.SaveChangesAsync();
+                return true; ¿
+            }
+            return false;
         }
-        catch { return false; }
     }
+
 }
 
 public class ProductDependentDataException : Exception

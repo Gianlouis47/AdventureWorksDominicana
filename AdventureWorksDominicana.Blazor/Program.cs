@@ -99,6 +99,8 @@ builder.Services.AddScoped<PurchaseOrderService>();
 builder.Services.AddScoped<ProductInventoryService>();
 builder.Services.AddScoped<ProductPhotoService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ProductVendorService>();
+
 
 
 builder.Services.AddScoped<BusinessEntityAddressService>();

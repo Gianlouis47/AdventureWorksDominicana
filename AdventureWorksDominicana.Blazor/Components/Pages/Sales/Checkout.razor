@@ -191,7 +191,7 @@
                                 <option value=0>Seleccione su tarjeta de pago</option>
                                 @foreach (var c in CreditCardsList)
                                 {
-                                    <option value="@c.CreditCardId">@c.CardType - @c.CardNumber</option>
+                                    <option value="@c.CreditCardId">@c.CardType - ••••@ObtenerUltimosDigitos(c.CardNumber)</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="() => SalesOrderHeader.CreditCardId" />
@@ -202,8 +202,9 @@
                                 <div>
                                     <label>Tipo de Tarjeta</label>
                                     <InputSelect @bind-Value="NewCreditCard.CardType" class="form-select">
-                                        <option value="Credito">Credito</option>
-                                        <option value="Debito">Debito</option>
+                                        <option value=0>Seleccione un tipo de tarjeta</option>
+                                        <option value="Visa">Visa</option>
+                                        <option value="Masterd-Card">Masterd-Card</option>
                                     </InputSelect>
                                 </div>
                                 <div>
@@ -390,7 +391,7 @@
     private bool CreditCardValidation()
     {
         bool validationFound = false;
-        if (string.IsNullOrWhiteSpace(NewCreditCard.CardType) || (NewCreditCard.CardNumber.Trim().Length < 13 || NewCreditCard.CardNumber.Trim().Length > 14)
+        if (string.IsNullOrWhiteSpace(NewCreditCard.CardType) || (NewCreditCard.CardNumber.Trim().Length == 16)
             || NewCreditCard.ExpMonth == 0 || NewCreditCard.ExpYear == 0)
             return true;
         return validationFound;
@@ -643,4 +644,11 @@
 
     private void GetTotal() => total = (freight + subtotal + (subtotal * taxes)) - discountPct;
 
+    private string ObtenerUltimosDigitos(string numeroTarjeta)
+    {
+        if (string.IsNullOrWhiteSpace(numeroTarjeta)) return "0000";
+        var cleanNumber = numeroTarjeta.Replace(" ", "").Replace("-", "");
+        if (cleanNumber.Length <= 4) return cleanNumber;
+        return cleanNumber.Substring(cleanNumber.Length - 4);
+    }
 }

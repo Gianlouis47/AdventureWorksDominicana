@@ -1,6 +1,6 @@
 ﻿@page "/Sales"
 
-@attribute [Authorize(Roles = "Customer, Admin")]
+@attribute [Authorize(Roles = "Customer, Admin, SalesManager")]
 @rendermode InteractiveServer
 
 @inject ProductService productService

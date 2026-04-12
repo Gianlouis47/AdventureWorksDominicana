@@ -1,5 +1,5 @@
 ﻿@page "/TransactionHistory/Index"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin, SalesManager")]
 
 @inject TransactionHistoryService transactionHistoryService
 @inject ToastService toastService

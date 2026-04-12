@@ -1,5 +1,5 @@
 ﻿@page "/Product/Index"
-@attribute [Authorize(Roles = "Admin, ProductionManager")]
+@attribute [Authorize(Roles = "Admin, ProductionManager, SalesManager")]
 
 @inject ProductService productService;
 @rendermode InteractiveServer

@@ -105,9 +105,17 @@
 
 @code {
     // ========== LISTAS ==========
-    private List<Product> ProductList = new();           // ✅ Cambiado: usar Product, no ProductInventory
-    private List<Product> PagedProducts = new();         // ✅ Cambiado
-    private List<ProductCategory> Categorias = new();    // Para filtro
+    // 1. La lista original INMUTABLE que traemos de la BD
+    private IEnumerable<Product> _productosOriginales = new List<Product>();
+    
+    // 2. La lista con los filtros aplicados
+    private List<Product> ProductList = new();
+    
+    // 3. La lista final recortada que se dibuja en la pantalla
+    private List<Product> PagedProducts = new();
+    
+    // 4. Lista para el Select de categorías
+    private List<ProductCategory> Categorias = new();
 
     // ========== FILTROS ==========
     private int selectedCategoryId = 0;
@@ -142,19 +150,17 @@
 
     private async Task LoadProducts()
     {
-        // ✅ Obtener productos desde Product, no desde ProductInventory
-        ProductList = await productService.GetList(p =>
+        _productosOriginales = await productService.GetList(p =>
             p.SellStartDate <= DateTime.Now &&
             (p.SellEndDate == null || p.SellEndDate >= DateTime.Now));
         
-        // Cargar categorías para el filtro
-        Categorias = ProductList
+        Categorias = _productosOriginales
             .Where(p => p.ProductSubcategory?.ProductCategory != null)
             .Select(p => p.ProductSubcategory.ProductCategory)
             .DistinctBy(c => c.ProductCategoryId)
             .ToList();
-        
-        ActualizarVista();
+       
+        AplicarFiltros();
     }
 
     private async Task CountProductsShopping()
@@ -176,7 +182,6 @@
 
         try
         {
-            // Verificar stock disponible
             var stockTotal = await productInventoryService.GetList(i => i.ProductId == productId);
             var availableStock = stockTotal.Sum(i => i.Quantity);
             
@@ -214,7 +219,7 @@
         AplicarFiltros();
     }
 
-    private async Task Buscar(ChangeEventArgs e)
+    private void Buscar(ChangeEventArgs e)
     {
         searchTerm = e?.Value?.ToString() ?? string.Empty;
         AplicarFiltros();
@@ -222,29 +227,31 @@
 
     private void AplicarFiltros()
     {
-        var query = ProductList.AsQueryable();
+        var query = _productosOriginales.AsQueryable();
 
-        // Filtro por búsqueda
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.ToLower();
-            query = query.Where(p => p.Name.ToLower().Contains(term) ||
-                                     (p.ProductSubcategory != null && 
-                                      p.ProductSubcategory.ProductCategory != null && 
-                                      p.ProductSubcategory.ProductCategory.Name.ToLower().Contains(term)));
+            query = query.Where(p =>
+                (p.Name != null && p.Name.ToLower().Contains(term)) ||
+                (p.ProductSubcategory != null &&
+                 p.ProductSubcategory.ProductCategory != null &&
+                 p.ProductSubcategory.ProductCategory.Name != null &&
+                 p.ProductSubcategory.ProductCategory.Name.ToLower().Contains(term)));
         }
 
-        // Filtro por categoría
         if (selectedCategoryId > 0)
         {
-            query = query.Where(p => p.ProductSubcategory != null && 
+            query = query.Where(p => p.ProductSubcategory != null &&
                                      p.ProductSubcategory.ProductCategoryId == selectedCategoryId);
         }
 
         ProductList = query.ToList();
+        
         CurrentPage = 1;
         ActualizarVista();
     }
+
 
     private void ActualizarVista()
     {
@@ -252,6 +259,7 @@
             .Skip((CurrentPage - 1) * PageSize)
             .Take(PageSize)
             .ToList();
+            
         StateHasChanged();
     }
 

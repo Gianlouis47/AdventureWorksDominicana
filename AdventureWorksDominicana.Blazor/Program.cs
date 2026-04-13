@@ -72,9 +72,7 @@ builder.Services.AddScoped<PersonService>();
 builder.Services.AddScoped<ShiftService>();
 builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<ContactTypeService>();
-builder.Services.AddScoped<ProductCategoryService>();
 builder.Services.AddScoped<PhoneNumberTypeService>();
-builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<ProductCategoryService>();
 builder.Services.AddScoped<SalesTerritoryService>();
 builder.Services.AddScoped<VendorService>();
@@ -82,7 +80,6 @@ builder.Services.AddScoped<SalesOrderHeaderService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<SalesPersonService>();
 builder.Services.AddScoped<AddressService>();
-builder.Services.AddScoped<ShipMethodService>();
 builder.Services.AddScoped<CurrencyRateService>();
 builder.Services.AddScoped<SpecialOfferProductService>();
 builder.Services.AddScoped<ProductDescriptionService>();
@@ -99,7 +96,6 @@ builder.Services.AddScoped<TransactionHistoryService>();
 builder.Services.AddScoped<PurchaseOrderService>();
 builder.Services.AddScoped<ProductInventoryService>();
 builder.Services.AddScoped<ProductPhotoService>();
-builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ProductVendorService>();
 builder.Services.AddScoped<PayrollService>();
 builder.Services.AddScoped<PayrollParameterService>();
@@ -107,17 +103,10 @@ builder.Services.AddScoped<EmployeePayHistoryService>();
 builder.Services.AddScoped<EmployeeDepartmentService>();
 builder.Services.AddScoped<BusinessEntityAddressService>();
 builder.Services.AddScoped<PersonCreditCardService>();
-builder.Services.AddScoped<IService<SalesOrderHeader, int>, ShippingService>();
+builder.Services.AddScoped<ShippingService>();
 builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<ProductVendorService>();
 builder.Services.AddScoped<SpecialOfferService>();
-builder.Services.AddScoped<UnitMeasureService>();
 
-
-
-
-builder.Services.AddScoped<BusinessEntityAddressService>();
-builder.Services.AddScoped<PersonCreditCardService>();
 var app = builder.Build();
 
 

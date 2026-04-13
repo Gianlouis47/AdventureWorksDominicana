@@ -17,7 +17,7 @@
         <InputText class="form-control"
                    placeholder="Buscar por orden o cliente..."
                    @bind-Value="Busqueda"
-                   @oninput="async _ => await Cargar()" />
+                   @oninput="Buscar" />
     </div>
 
     <!-- LISTA -->
@@ -77,12 +77,10 @@
 
 </div>
 
-<!-- MODAL CANCELAR -->
+<!-- MODAL -->
 @if (mostrarModal)
 {
-    <div class="modal fade show d-block" tabindex="-1"
-         style="background-color: rgba(0,0,0,0.5);">
-
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
 
@@ -95,13 +93,8 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CerrarModal">
-                        No
-                    </button>
-
-                    <button class="btn btn-danger" @onclick="ConfirmarCancelacion">
-                        Sí, cancelar
-                    </button>
+                    <button class="btn btn-secondary" @onclick="CerrarModal">No</button>
+                    <button class="btn btn-danger" @onclick="ConfirmarCancelacion">Sí, cancelar</button>
                 </div>
 
             </div>
@@ -123,15 +116,20 @@
     private bool mostrarModal = false;
 
     private List<SalesOrderHeader> ListaPaginada =>
-        Lista.Skip((paginaActual - 1) * pageSize)
-             .Take(pageSize)
-             .ToList();
+        Lista.Skip((paginaActual - 1) * pageSize).Take(pageSize).ToList();
 
     private int TotalPaginas =>
         (int)Math.Ceiling((double)Lista.Count / pageSize);
 
     protected override async Task OnInitializedAsync()
     {
+        await Cargar();
+    }
+
+    private async Task Buscar(ChangeEventArgs e)
+    {
+        Busqueda = e.Value?.ToString() ?? "";
+        paginaActual = 1;
         await Cargar();
     }
 
@@ -158,7 +156,6 @@
         }
     }
 
-    // 🔹 MODAL
     private void AbrirConfirmacion(int id)
     {
         orderCancelarId = id;
@@ -182,7 +179,6 @@
         CerrarModal();
     }
 
-    // 🔹 PAGINACIÓN
     private void Siguiente()
     {
         if (paginaActual < TotalPaginas)
@@ -195,7 +191,6 @@
             paginaActual--;
     }
 
-    // HELPERS
     private decimal GetPeso(int id) =>
         pesos.ContainsKey(id) ? pesos[id] : 0;
 

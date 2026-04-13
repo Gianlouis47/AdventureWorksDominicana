@@ -1,50 +1,50 @@
 ﻿/* CONTENEDOR */
-.currencyrate-form-container {
+.customer-form-container {
     max-width: 900px;
     margin: auto;
     padding: 20px;
 }
 
 /* HEADER */
-.currencyrate-form-header {
+.customer-form-header {
     margin-bottom: 20px;
 }
 
-    .currencyrate-form-header h3 {
+    .customer-form-header h3 {
         margin: 0;
         color: #01398C;
     }
 
-    .currencyrate-form-header span {
+    .customer-form-header span {
         font-size: 0.9rem;
         color: #6b7280;
     }
 
-/* BODY */
-.currencyrate-form-body {
+/* FORM */
+.customer-form {
     margin-top: 20px;
 }
 
     /* CARD */
-    .currencyrate-form-body .card {
+    .customer-form .card {
         background-color: #F5F5F5;
         border: 2px solid #E6E6E6;
         border-radius: 20px;
         box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 20px -6px rgba(0,0,0,0.02);
     }
 
-    .currencyrate-form-body .card-body {
+    .customer-form .card-body {
         padding: 24px;
     }
 
-    .currencyrate-form-body .card-footer {
+    .customer-form .card-footer {
         background: white;
         border-top: 1px solid #e5e7eb;
         border-radius: 0 0 20px 20px;
         padding: 16px;
     }
 
-/* SECCIÓN */
+/* SECCIONES */
 .section-title {
     font-size: 1rem;
     font-weight: 600;
@@ -55,35 +55,65 @@
 }
 
 /* LABELS */
-.currencyrate-form-body .form-label {
+.customer-form .form-label {
     font-size: 0.85rem;
     color: #374151;
+    margin-bottom: 4px;
 }
 
 /* INPUTS */
-.currencyrate-form-body .form-control,
-.currencyrate-form-body .form-select {
+.customer-form .form-control,
+.customer-form .form-select {
+    width: 100%;
     border-radius: 10px;
     border: 1px solid #dbeafe;
+    padding: 8px 12px;
+    font-size: 0.9rem;
 }
 
-    .currencyrate-form-body .form-control:focus,
-    .currencyrate-form-body .form-select:focus {
+    .customer-form .form-control:focus,
+    .customer-form .form-select:focus {
         border-color: #466EDB;
         box-shadow: 0 0 0 2px rgba(70,110,219,0.15);
     }
 
+    /* DISABLED */
+    .customer-form .form-control:disabled {
+        background-color: #e5e7eb;
+        cursor: not-allowed;
+    }
+
 /* BOTONES */
-.currencyrate-form-body .btn-primary {
+.customer-form .btn-primary {
     background: #466EDB;
     border: none;
+    padding: 8px 20px;
     border-radius: 10px;
 }
 
-    .currencyrate-form-body .btn-primary:hover {
+    .customer-form .btn-primary:hover {
         background: #01398C;
     }
 
-.currencyrate-form-body .btn-secondary {
+.customer-form .btn-secondary {
+    background: #6b7280;
+    border: none;
+    color: white;
+    padding: 8px 20px;
     border-radius: 10px;
+}
+
+    .customer-form .btn-secondary:hover {
+        background: #595C66;
+    }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .customer-form-container {
+        padding: 15px;
+    }
+
+    .customer-form .card-body {
+        padding: 16px;
+    }
 }

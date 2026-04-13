@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Admin, SalesManager")]
 
 @inject SalesTerritoryService salesTerritoryService;
+@inject AuthenticationStateProvider authenticationStateProvider
 @rendermode InteractiveServer
 
 <div class="sales-territory-container">
@@ -77,13 +78,15 @@
             <PropertyColumn Property="@(s => s.CostYtd)" Format="C2" Title="Costos" />
             <PropertyColumn Property="@(s => s.CostLastYear)" Format="C2" Title="Costos LY" />
 
-            <TemplateColumn Class="text-center" Context="s" Title="Acciones">
-                <a href="/SalesTerritory/Edit/@s.TerritoryId"
-                       class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-pencil"></i> Modificar
-                </a>
-            </TemplateColumn>
-
+            @if (canEdit)
+            {
+                <TemplateColumn Class="text-center" Context="s" Title="Acciones">
+                    <a href="/SalesTerritory/Edit/@s.TerritoryId"
+                           class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Modificar
+                    </a>
+                </TemplateColumn>
+            }
         </QuickGrid>
 
         <Paginator State="@pages" />
@@ -98,9 +101,15 @@
     public string Filtro { get; set; } = "";
     public string ValorFiltro { get; set; } = "";
     private PaginationState pages = new PaginationState { ItemsPerPage = 5 };
+    private bool canEdit = false;
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        canEdit = user.IsInRole("Admin");
+
         ListaSalesTerritory = await salesTerritoryService.GetList(s => s.TerritoryId > 0);
         ListaSalesTerritory = ListaSalesTerritory.OrderByDescending(s => s.ModifiedDate).ToList();
     }

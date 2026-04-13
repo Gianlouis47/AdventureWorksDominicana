@@ -1,131 +1,238 @@
 ﻿@page "/shipping-orders"
-@using Microsoft.AspNetCore.Components.QuickGrid
+
+@rendermode InteractiveServer
+
 @using AdventureWorksDominicana.Data.Models
-@inject AdventureWorksDominicana.Services.ShippingService ShippingService
-@inject NavigationManager Navigation
+@using AdventureWorksDominicana.Services
 
-<div class="card shadow-lg">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">Envíos</h4>
+@inject ShippingService shippingService
+@inject NavigationManager navigationManager
+
+<div class="container">
+
+    <h3 class="mb-3">Mis Envíos</h3>
+
+    <!-- BUSCADOR -->
+    <div class="mb-4">
+        <InputText class="form-control"
+                   placeholder="Buscar por orden o cliente..."
+                   @bind-Value="Busqueda"
+                   @oninput="async _ => await Cargar()" />
     </div>
 
-    <div class="card-body">
-        <div class="row g-3 mb-2">
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Desde</label>
+    <!-- LISTA -->
+    @foreach (var order in ListaPaginada)
+    {
+        <div class="card mb-3 shadow-sm p-3">
+
+            <div class="d-flex justify-content-between">
+                <strong>#@( (paginaActual - 1) * pageSize + ListaPaginada.IndexOf(order) + 1 )</strong>
+                <span class="badge bg-primary">@GetEstado(order.Status)</span>
             </div>
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Hasta</label>
+
+            <hr />
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div><strong>Cliente:</strong> @GetCliente(order)</div>
+                    <div><strong>Fecha:</strong> @order.OrderDate</div>
+                </div>
+
+                <div class="col-md-6 text-end">
+                    <div><strong>Peso:</strong> @GetPeso(order.SalesOrderId) lbs</div>
+                    <div><strong>Envío:</strong> @order.Freight</div>
+                </div>
             </div>
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Buscar</label>
+
+            <div class="mt-2 text-muted">
+                @GetPeso(order.SalesOrderId) x 2 = @order.Freight
             </div>
-            <div class="col-md-3">
-                <label class="form-label fw-bold">&nbsp;</label>
+
+            <div class="progress mt-3" style="height: 8px;">
+                <div class="progress-bar" style="width:@GetProgreso(order.Status)%"></div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+
+                <button class="btn btn-outline-primary btn-sm"
+                        @onclick="() => VerDetalle(order.SalesOrderId)">
+                    Detalle
+                </button>
+
+                <button class="btn btn-outline-danger btn-sm"
+                        @onclick="() => AbrirConfirmacion(order.SalesOrderId)">
+                    Cancelar
+                </button>
+
             </div>
         </div>
+    }
 
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <InputDate class="form-control" @bind-Value="FiltroDesde" />
-            </div>
-            <div class="col-md-3">
-                <InputDate class="form-control" @bind-Value="FiltroHasta" />
-            </div>
-            <div class="col-md-3">
-                <InputText class="form-control" @bind-Value="Busqueda" />
-            </div>
-            <div class="col-md-3 d-flex gap-2">
-                <button class="btn btn-primary" @onclick="BuscarAsync">
-                    <i class="bi bi-search"></i> Buscar
-                </button>
-                <button class="btn btn-outline-primary" @onclick="LimpiarAsync">
-                    <i class="bi bi-arrow-clockwise"></i>
-                </button>
-            </div>
-        </div>
-
-        <QuickGrid Items="@(orders.AsQueryable())" class="table table-striped table-bordered table-hover">
-            <PropertyColumn Property="o => o.SalesOrderId" Title="Orden" />
-            <PropertyColumn Property="o => o.OrderDate" Title="Fecha" />
-            <PropertyColumn Property="o => o.TotalDue" Title="Total" />
-
-            <TemplateColumn Title="Cliente">
-                @GetCustomerName(context)
-            </TemplateColumn>
-
-            <TemplateColumn Title="Estado">
-                @GetStatusText(context.Status)
-            </TemplateColumn>
-
-            <TemplateColumn Title="Acciones">
-                <button class="btn btn-outline-primary btn-sm" @onclick="() => AbrirAsync(context.SalesOrderId)">
-                    <i class="bi bi-pencil-square"></i> @(context.Status == 5 ? "Editar" : "Procesar")
-                </button>
-            </TemplateColumn>
-        </QuickGrid>
+    <!-- PAGINACIÓN -->
+    <div class="d-flex justify-content-between mt-3">
+        <button class="btn btn-outline-primary" @onclick="Anterior">Anterior</button>
+        <span>Página @paginaActual de @TotalPaginas</span>
+        <button class="btn btn-outline-primary" @onclick="Siguiente">Siguiente</button>
     </div>
 
-    <div class="card-footer text-end fw-bold">
-        Total de registros: @orders.Count
-    </div>
 </div>
 
+<!-- MODAL CANCELAR -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background-color: rgba(0,0,0,0.5);">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Cancelación</h5>
+                </div>
+
+                <div class="modal-body">
+                    <p>¿Seguro que deseas cancelar este envío?</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CerrarModal">
+                        No
+                    </button>
+
+                    <button class="btn btn-danger" @onclick="ConfirmarCancelacion">
+                        Sí, cancelar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    private List<SalesOrderHeader> orders = new();
-    private DateTime? FiltroDesde;
-    private DateTime? FiltroHasta;
-    private string? Busqueda;
+
+    public List<SalesOrderHeader> Lista = new();
+    public string Busqueda = "";
+
+    private Dictionary<int, decimal> pesos = new();
+
+    private int paginaActual = 1;
+    private int pageSize = 5;
+
+    private int? orderCancelarId;
+    private bool mostrarModal = false;
+
+    private List<SalesOrderHeader> ListaPaginada =>
+        Lista.Skip((paginaActual - 1) * pageSize)
+             .Take(pageSize)
+             .ToList();
+
+    private int TotalPaginas =>
+        (int)Math.Ceiling((double)Lista.Count / pageSize);
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarAsync();
+        await Cargar();
     }
 
-    private async Task CargarAsync()
+    private async Task Cargar()
     {
-        orders = await ShippingService.GetShippingOrdersAsync(FiltroDesde, FiltroHasta, Busqueda);
-    }
+        var data = await shippingService.GetList(x => true);
 
-    private async Task BuscarAsync()
-    {
-        await CargarAsync();
-    }
-
-    private async Task LimpiarAsync()
-    {
-        FiltroDesde = null;
-        FiltroHasta = null;
-        Busqueda = null;
-        await CargarAsync();
-    }
-
-    private void AbrirAsync(int orderId)
-    {
-        Navigation.NavigateTo($"/shipping-process/{orderId}");
-    }
-
-    private static string GetCustomerName(SalesOrderHeader order)
-    {
-        var personName = order.Customer?.Person != null
-            ? $"{order.Customer.Person.FirstName} {order.Customer.Person.LastName}".Trim()
-            : string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(personName))
+        if (!string.IsNullOrWhiteSpace(Busqueda))
         {
-            return personName;
+            data = data.Where(x =>
+                x.SalesOrderId.ToString().Contains(Busqueda) ||
+                GetCliente(x).Contains(Busqueda, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
         }
 
-        return order.Customer?.Store?.Name ?? "N/A";
+        Lista = data;
+
+        pesos.Clear();
+
+        foreach (var item in Lista)
+        {
+            pesos[item.SalesOrderId] =
+                await shippingService.GetPesoTotal(item.SalesOrderId);
+        }
     }
 
-    private static string GetStatusText(byte status)
+    // 🔹 MODAL
+    private void AbrirConfirmacion(int id)
     {
-        return status switch
+        orderCancelarId = id;
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        orderCancelarId = null;
+    }
+
+    private async Task ConfirmarCancelacion()
+    {
+        if (orderCancelarId != null)
         {
-            1 => "Pendiente",
-            5 => "Enviado",
-            _ => "Otro"
-        };
+            await shippingService.CancelarEnvio(orderCancelarId.Value);
+            await Cargar();
+        }
+
+        CerrarModal();
+    }
+
+    // 🔹 PAGINACIÓN
+    private void Siguiente()
+    {
+        if (paginaActual < TotalPaginas)
+            paginaActual++;
+    }
+
+    private void Anterior()
+    {
+        if (paginaActual > 1)
+            paginaActual--;
+    }
+
+    // HELPERS
+    private decimal GetPeso(int id) =>
+        pesos.ContainsKey(id) ? pesos[id] : 0;
+
+    private string GetCliente(SalesOrderHeader order)
+    {
+        if (order.Customer?.Person != null)
+            return $"{order.Customer.Person.FirstName} {order.Customer.Person.LastName}";
+
+        if (order.Customer?.Store != null)
+            return order.Customer.Store.Name;
+
+        return "N/A";
+    }
+
+    private string GetEstado(byte status) => status switch
+    {
+        1 => "Pendiente",
+        2 => "Procesando",
+        3 => "En tránsito",
+        4 => "En camino",
+        5 => "Entregado",
+        6 => "Cancelado",
+        _ => "Desconocido"
+    };
+
+    private int GetProgreso(byte status) => status switch
+    {
+        1 => 10,
+        2 => 30,
+        3 => 60,
+        4 => 80,
+        5 => 100,
+        _ => 0
+    };
+
+    private void VerDetalle(int id)
+    {
+        navigationManager.NavigateTo($"/shipping-detail/{id}");
     }
 }

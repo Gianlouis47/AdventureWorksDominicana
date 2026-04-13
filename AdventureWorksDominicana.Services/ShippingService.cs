@@ -6,184 +6,146 @@ using System.Linq.Expressions;
 
 namespace AdventureWorksDominicana.Services;
 
-public class ShippingService(IDbContextFactory<Contexto> DbContextFactory)
+public class ShippingService(IDbContextFactory<Contexto> DbFactory)
     : IService<SalesOrderHeader, int>
 {
-    public async Task<bool> Existe(int id)
-    {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
-        return await context.SalesOrderHeaders.AnyAsync(x => x.SalesOrderId == id);
-    }
-
     public async Task<bool> Guardar(SalesOrderHeader entity)
     {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
-        context.SalesOrderHeaders.Add(entity);
-        return await context.SaveChangesAsync() > 0;
+        if (!await Existe(entity.SalesOrderId))
+            return await Insertar(entity);
+        else
+            return await Modificar(entity);
+    }
+
+    public async Task<bool> Insertar(SalesOrderHeader entity)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        contexto.SalesOrderHeaders.Add(entity);
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> Existe(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.SalesOrderHeaders.AnyAsync(x => x.SalesOrderId == id);
     }
 
     public async Task<bool> Modificar(SalesOrderHeader entity)
     {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
-        context.SalesOrderHeaders.Update(entity);
-        return await context.SaveChangesAsync() > 0;
-    }
-
-    public async Task<bool> Eliminar(int id)
-    {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
-        var entity = await context.SalesOrderHeaders.FindAsync(id);
-        if (entity == null) return false;
-
-        context.SalesOrderHeaders.Remove(entity);
-        return await context.SaveChangesAsync() > 0;
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        contexto.SalesOrderHeaders.Update(entity);
+        return await contexto.SaveChangesAsync() > 0;
     }
 
     public async Task<SalesOrderHeader?> Buscar(int id)
     {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
 
-        return await context.SalesOrderHeaders
-            .AsNoTracking()
-            .Include(o => o.Customer)
+        return await contexto.SalesOrderHeaders
+            .Include(x => x.Customer)
                 .ThenInclude(c => c.Person)
-            .Include(o => o.Customer)
+            .Include(x => x.Customer)
                 .ThenInclude(c => c.Store)
-            .Include(o => o.ShipMethod)
-            .Include(o => o.ShipToAddress)
-            .Include(o => o.BillToAddress)
-            .Include(o => o.SalesOrderDetails)
+            .Include(x => x.SalesOrderDetails)
                 .ThenInclude(d => d.SpecialOfferProduct)
                     .ThenInclude(s => s.Product)
-            .FirstOrDefaultAsync(o => o.SalesOrderId == id);
+            .FirstOrDefaultAsync(x => x.SalesOrderId == id);
+    }
+
+    public async Task<bool> Eliminar(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var entity = await Buscar(id);
+
+        if (entity == null) return false;
+
+        contexto.SalesOrderHeaders.Remove(entity);
+        return await contexto.SaveChangesAsync() > 0;
     }
 
     public async Task<List<SalesOrderHeader>> GetList(Expression<Func<SalesOrderHeader, bool>> criterio)
     {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
 
-        return await context.SalesOrderHeaders
+        var rawData = await contexto.SalesOrderHeaders
             .AsNoTracking()
             .Where(criterio)
+            .OrderByDescending(x => x.OrderDate)
+            .Select(x => new
+            {
+                x.SalesOrderId,
+                x.OrderDate,
+                x.TotalDue,
+                Freight = (decimal?)x.Freight,
+                Status = (byte?)x.Status,
+
+                FirstName = x.Customer != null && x.Customer.Person != null ? x.Customer.Person.FirstName : "",
+                LastName = x.Customer != null && x.Customer.Person != null ? x.Customer.Person.LastName : "",
+                StoreName = x.Customer != null && x.Customer.Store != null ? x.Customer.Store.Name : ""
+            })
             .ToListAsync();
-    }
 
-
-    public async Task<List<SalesOrderHeader>> GetShippingOrdersAsync(DateTime? from, DateTime? to, string? search)
-    {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
-
-        var query = context.SalesOrderHeaders
-            .AsNoTracking()
-            .Include(o => o.Customer).ThenInclude(c => c.Person)
-            .Include(o => o.Customer).ThenInclude(c => c.Store)
-            .Include(o => o.ShipMethod)
-            .Include(o => o.ShipToAddress)
-            .Where(o => o.Status == 1 || o.Status == 5);
-
-        if (from.HasValue)
-            query = query.Where(o => o.OrderDate >= from.Value.Date);
-
-        if (to.HasValue)
-            query = query.Where(o => o.OrderDate < to.Value.Date.AddDays(1));
-
-        if (!string.IsNullOrWhiteSpace(search))
+        return rawData.Select(x => new SalesOrderHeader
         {
-            search = search.Trim();
-
-            query = query.Where(o =>
-                o.SalesOrderId.ToString().Contains(search) ||
-                (o.Customer.Person != null &&
-                    ((o.Customer.Person.FirstName ?? "") + " " +
-                     (o.Customer.Person.LastName ?? "")).Contains(search)) ||
-                (o.Customer.Store != null &&
-                    (o.Customer.Store.Name ?? "").Contains(search))
-            );
-        }
-
-        return await query.OrderByDescending(o => o.OrderDate).ToListAsync();
+            SalesOrderId = x.SalesOrderId,
+            OrderDate = x.OrderDate,
+            TotalDue = x.TotalDue,
+            Freight = x.Freight ?? 0,
+            Status = x.Status ?? 0,
+            Customer = new Customer
+            {
+                Person = string.IsNullOrWhiteSpace(x.FirstName)
+                    ? null
+                    : new Person { FirstName = x.FirstName, LastName = x.LastName },
+                Store = string.IsNullOrWhiteSpace(x.StoreName)
+                    ? null
+                    : new Store { Name = x.StoreName }
+            }
+        }).ToList();
     }
 
-    public async Task<List<ShipMethod>> GetShipMethodsAsync()
+    public async Task<bool> ProcesarEnvio(int orderId)
     {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
 
-        return await context.ShipMethods
-            .AsNoTracking()
-            .OrderBy(x => x.Name)
-            .ToListAsync();
-    }
+        var order = await contexto.SalesOrderHeaders
+            .Include(x => x.SalesOrderDetails)
+            .FirstOrDefaultAsync(x => x.SalesOrderId == orderId);
 
-    public async Task<decimal> CalculateFreightAsync(int shipMethodId, decimal subtotal)
-    {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
+        if (order == null) return false;
 
-        var shipMethod = await context.ShipMethods
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.ShipMethodId == shipMethodId);
+        decimal pesoTotal = order.SalesOrderDetails.Sum(x => x.OrderQty);
 
-        if (shipMethod == null)
-            throw new InvalidOperationException("Método de envío no existe.");
-
-        return Math.Round(shipMethod.ShipBase + (subtotal * shipMethod.ShipRate), 2);
-    }
-
-    public async Task ConfirmShipmentAsync(int orderId, int shipMethodId)
-    {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
-
-        var order = await context.SalesOrderHeaders
-            .FirstOrDefaultAsync(o => o.SalesOrderId == orderId);
-
-        if (order == null)
-            throw new InvalidOperationException("Orden no encontrada.");
-
-        if (order.Status == 5)
-            throw new InvalidOperationException("Ya está enviada.");
-
-        var subtotal = await context.SalesOrderDetails
-            .Where(d => d.SalesOrderId == orderId)
-            .SumAsync(d => d.LineTotal);
-
-        var freight = await CalculateFreightAsync(shipMethodId, subtotal);
-
-        order.ShipMethodId = shipMethodId;
-        order.ShipDate = DateTime.Now;
-        order.ModifiedDate = DateTime.Now;
-        order.SubTotal = subtotal;
-        order.Freight = freight;
-        order.TotalDue = subtotal + order.TaxAmt + freight;
+        order.Freight = pesoTotal * 2;
         order.Status = 5;
 
-        await context.SaveChangesAsync();
+        contexto.Update(order);
+
+        return await contexto.SaveChangesAsync() > 0;
     }
 
-    public async Task UpdateShipmentAsync(int orderId, int shipMethodId, string? comment)
+    public async Task<decimal> GetPesoTotal(int orderId)
     {
-        await using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var contexto = await DbFactory.CreateDbContextAsync();
 
-        var order = await context.SalesOrderHeaders
-            .FirstOrDefaultAsync(o => o.SalesOrderId == orderId);
+        return await contexto.SalesOrderDetails
+            .Where(x => x.SalesOrderId == orderId)
+            .SumAsync(x => (decimal)x.OrderQty);
+    }
 
-        if (order == null)
-            throw new InvalidOperationException("Orden no encontrada.");
+    public async Task<bool> CancelarEnvio(int orderId)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
 
-        if (order.Status != 5)
-            throw new InvalidOperationException("Solo envíos confirmados.");
+        var order = await contexto.SalesOrderHeaders
+            .FirstOrDefaultAsync(x => x.SalesOrderId == orderId);
 
-        var subtotal = await context.SalesOrderDetails
-            .Where(d => d.SalesOrderId == orderId)
-            .SumAsync(d => d.LineTotal);
+        if (order == null) return false;
 
-        var freight = await CalculateFreightAsync(shipMethodId, subtotal);
+        order.Status = 6;
 
-        order.ShipMethodId = shipMethodId;
-        order.Comment = comment;
-        order.ModifiedDate = DateTime.Now;
-        order.SubTotal = subtotal;
-        order.Freight = freight;
-        order.TotalDue = subtotal + order.TaxAmt + freight;
+        contexto.Update(order);
 
-        await context.SaveChangesAsync();
+        return await contexto.SaveChangesAsync() > 0;
     }
 }

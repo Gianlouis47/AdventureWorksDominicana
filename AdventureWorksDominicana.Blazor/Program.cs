@@ -104,9 +104,9 @@ builder.Services.AddScoped<ProductVendorService>();
 builder.Services.AddScoped<BusinessEntityAddressService>();
 builder.Services.AddScoped<PersonCreditCardService>();
 builder.Services.AddScoped<IService<SalesOrderHeader, int>, ShippingService>();
-builder.Services.AddScoped<ShippingService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ProductVendorService>();
+builder.Services.AddScoped<ShippingService>();
 
 
 

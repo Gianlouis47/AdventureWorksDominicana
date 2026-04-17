@@ -154,10 +154,13 @@
 </EditForm>
 
 @code {
+    
     public Employee Employee { get; set; } = new Employee();
     private int? SelectedPersonId;
     private string mensajeError = string.Empty;
 
+    private EditContext? editContext;
+    private ValidationMessageStore? messageStore;
     private short SelectedDepartmentId = 0;
     private byte SelectedShiftId = 0;
     private decimal InitialRateDOP = 0;
@@ -169,17 +172,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Pongo los valores predeterminados para cuando abren el formulario
+        editContext = new(Employee);
+        messageStore = new(editContext);
+
         Employee.HireDate = DateOnly.FromDateTime(DateTime.Today);
         Employee.BirthDate = DateOnly.FromDateTime(DateTime.Today.AddYears(-18));
         Employee.CurrentFlag = true;
         Employee.SalariedFlag = true;
 
-        // Cargo las listas de la base de datos para llenar los select
         Departamentos = await departmentService.GetList(d => true);
         Turnos = await shiftService.GetList(s => true);
-        
-        // Asigno el sueldo minimo por defecto usando la tasa de cambio
+
         InitialRateDOP = 6.5m * TasaCambio;
     }
 

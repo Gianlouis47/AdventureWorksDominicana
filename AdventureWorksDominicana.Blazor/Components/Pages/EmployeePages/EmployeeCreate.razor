@@ -231,11 +231,21 @@
             return;
         }
 
-        //validacion de cuenta Bancaria
+        //valido numero de cuenta Bancaria
         if (string.IsNullOrWhiteSpace(Employee.BankAccountNumber) || Employee.BankAccountNumber.Length < 10)
         {
             errorCuenta = true;
             mensajeError = "El número de cuenta debe tener al menos 10 dígitos.";
+            return;
+        }
+
+        //valido la edad de la persona
+        var fechaActual = DateOnly.FromDateTime(DateTime.Today);
+        var edadMinima = Employee.BirthDate.AddYears(18);
+
+        if (edadMinima > fechaActual)
+        {
+            mensajeError = "El empleado debe tener al menos 18 años de edad.";
             return;
         }
 

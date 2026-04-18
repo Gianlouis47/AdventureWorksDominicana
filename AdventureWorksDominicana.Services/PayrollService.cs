@@ -9,7 +9,7 @@ namespace AdventureWorksDominicana.Services;
 
 public class PayrollService(IDbContextFactory<Contexto> DbFactory) : IService<Payroll, int>
 {
-    private const decimal TASA_CAMBIO = 60.50m; // Constante de conversión
+    private const decimal TASA_CAMBIO = 60.50m; // Constane de conversión
 
     public async Task<bool> Guardar(Payroll entidad)
     {
